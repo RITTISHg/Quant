@@ -7,7 +7,6 @@ interface ExposureHeatmapProps {
 }
 
 export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
-  // Group by sector
   const sectorGroupMap: Record<string, { weight: number; marketValue: number; positionsCount: number }> = {};
   let totalMarketValue = 0;
 
@@ -21,7 +20,6 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
     sec.positionsCount += 1;
   }
 
-  // Compute sector weights
   const sectors = Object.keys(sectorGroupMap).map((sectorName) => {
     const data = sectorGroupMap[sectorName];
     const weight = totalMarketValue > 0 ? (data.marketValue / totalMarketValue) * 100 : 0;
@@ -37,7 +35,6 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
     return val.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   };
 
-  // Map P&L percentages to elegant background shades of green/red
   const getPLColorClass = (plPct: number) => {
     if (plPct > 15) return 'bg-emerald-950/60 border-emerald-500 hover:border-emerald-400 text-emerald-300';
     if (plPct > 4) return 'bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-500 text-emerald-400/95';
@@ -49,7 +46,6 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
   return (
     <div className="bg-gray-900/40 border border-gray-800/80 rounded-2xl p-6 flex flex-col h-full justify-between gap-6" id="exposure-heatmap-section">
       
-      {/* Top Part: Asset Exposure Map */}
       <div className="flex flex-col flex-1">
         <div>
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-800/80">
@@ -76,7 +72,6 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
                   style={{ minHeight: '105px' }}
                   id={`heatmap-box-${pos.symbol}`}
                 >
-                  {/* Background faint blur circle for design flair */}
                   <div className="absolute -top-6 -right-6 w-12 h-12 bg-gray-800/15 rounded-full blur-md group-hover:scale-150 transition-transform" />
                   
                   <div className="flex justify-between items-start z-10">
@@ -102,10 +97,8 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
         </div>
       </div>
 
-      {/* Decorative subtle divider */}
       <div className="border-t border-gray-800/60 my-1 shrink-0" />
 
-      {/* Bottom Part: Sector Concentrations */}
       <div className="flex flex-col shrink-0">
         <div>
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-800/80">

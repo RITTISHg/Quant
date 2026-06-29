@@ -101,7 +101,6 @@ export default function MonteCarloChart({ paths }: MonteCarloChartProps) {
                 wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace' }}
               />
 
-              {/* Statistical Bounds */}
               <Line 
                 name="Best Case (95%)" 
                 type="monotone" 
@@ -128,7 +127,6 @@ export default function MonteCarloChart({ paths }: MonteCarloChartProps) {
                 dot={false} 
               />
 
-              {/* Faint Sample Random Paths */}
               <Line type="monotone" dataKey="path0" stroke="#60a5fa" strokeWidth={1} opacity={0.25} dot={false} legendType="none" />
               <Line type="monotone" dataKey="path1" stroke="#a78bfa" strokeWidth={1} opacity={0.25} dot={false} legendType="none" />
               <Line type="monotone" dataKey="path2" stroke="#2dd4bf" strokeWidth={1} opacity={0.25} dot={false} legendType="none" />

@@ -101,7 +101,6 @@ export default function HistoricalPerformanceChart({ data }: HistoricalPerforman
 
               <Tooltip content={<CustomTooltip />} />
 
-              {/* Net Asset Value Area */}
               <Area 
                 name="Portfolio NAV"
                 type="monotone" 
@@ -112,7 +111,6 @@ export default function HistoricalPerformanceChart({ data }: HistoricalPerforman
                 fill="url(#colorValue)" 
               />
 
-              {/* Cumulative P&L Area */}
               <Area 
                 name="Total P&L"
                 type="monotone" 

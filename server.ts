@@ -8,17 +8,14 @@ import {
   computeMonteCarloVaR, 
   computeBeta, 
   calculateVolatility 
-} from "./src/utils/riskEngine.js"; // Standard Node.js ESM import or TS resolution
-// Note: We can import from typescript files directly since tsx runs it. Let's use direct path imports.
+} from "./src/utils/riskEngine.js";
 import { SECTOR_MAP, Trade, Position, LivePrice, RiskMetrics, HistoricalPerformance } from "./src/types.js";
 
 const app = express();
 const PORT = 3000;
 
-// Enable JSON body parsing
 app.use(express.json());
 
-// Ensure data folder exists
 const DATA_DIR = path.join(process.cwd(), "data");
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -26,7 +23,6 @@ if (!fs.existsSync(DATA_DIR)) {
 
 const TRADES_FILE = path.join(DATA_DIR, "trades.json");
 
-// Default initial trades to seed if none exist
 const DEFAULT_TRADES: Trade[] = [
   { id: "t1", symbol: "AAPL", type: "BUY", quantity: 50, price: 195.50, timestamp: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString() },
   { id: "t2", symbol: "MSFT", type: "BUY", quantity: 30, price: 390.00, timestamp: new Date(Date.now() - 25 * 24 * 3600 * 1000).toISOString() },
@@ -41,21 +37,12 @@ if (!fs.existsSync(TRADES_FILE)) {
   fs.writeFileSync(TRADES_FILE, JSON.stringify(DEFAULT_TRADES, null, 2), "utf8");
 }
 
-// Global In-Memory Cache (the "Redis-like" store)
-// Maps symbol -> LivePrice
 const livePriceCache: Record<string, LivePrice> = {};
-
-// Historical daily prices map (for risk math)
-// Maps symbol -> number[] of closing prices (past ~90 days)
 const historicalPricesCache: Record<string, number[]> = {};
 
-// Fetch or generate historical prices
 function generateSyntheticHistory(symbol: string, days: number = 90): number[] {
-  const meta = SECTOR_MAP[symbol] || { sector: "Technology", name: symbol };
-  
-  // Set highly realistic starting prices
   let basePrice = 150;
-  let dailyVol = 0.02; // 2% daily volatility (~31% annualized)
+  let dailyVol = 0.02;
 
   switch (symbol) {
     case "AAPL": basePrice = 210; dailyVol = 0.015; break;
@@ -76,7 +63,7 @@ function generateSyntheticHistory(symbol: string, days: number = 90): number[] {
   }
 
   const prices: number[] = [basePrice];
-  const drift = 0.0004; // Slightly positive daily drift (~10% annual return)
+  const drift = 0.0004;
 
   for (let i = 1; i < days; i++) {
     const u1 = Math.random();
@@ -96,7 +83,6 @@ async function getStockHistory(symbol: string): Promise<number[]> {
   }
 
   try {
-    console.log(`Fetching real historical data from Yahoo Finance for ${symbol}...`);
     const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=3mo&interval=1d`, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -115,7 +101,6 @@ async function getStockHistory(symbol: string): Promise<number[]> {
       throw new Error(`Empty price array for ${symbol}`);
     }
 
-    // Clean data: replace nulls with last valid close
     const cleanedCloses: number[] = [];
     let lastValid = closes.find(c => c !== null) || 100;
 
@@ -129,25 +114,19 @@ async function getStockHistory(symbol: string): Promise<number[]> {
     }
 
     historicalPricesCache[symbol] = cleanedCloses;
-    console.log(`Success! Loaded ${cleanedCloses.length} real price points for ${symbol}.`);
     return cleanedCloses;
   } catch (error: any) {
-    console.warn(`Could not load real data for ${symbol}: ${error.message}. Falling back to high-fidelity synthetic GBM prices.`);
     const synth = generateSyntheticHistory(symbol, 90);
     historicalPricesCache[symbol] = synth;
     return synth;
   }
 }
 
-// Pre-populate caches
 async function prefillCaches(symbols: string[]) {
-  // Ensure SPY is always prefetched for beta calculation
   const allSymbols = Array.from(new Set([...symbols, "SPY"]));
-  console.log("Prefilling stock data cache...");
   for (const sym of allSymbols) {
     const history = await getStockHistory(sym);
     
-    // Set initial live price as the last closing price
     const lastPrice = history[history.length - 1];
     const prevPrice = history[history.length - 2] || lastPrice;
     const change = lastPrice - prevPrice;
@@ -159,13 +138,11 @@ async function prefillCaches(symbols: string[]) {
       change: Math.round(change * 100) / 100,
       changePercent: Math.round(changePercent * 100) / 100,
       lastUpdated: new Date().toISOString(),
-      history: history.slice(-15), // keep last 15 days for mini sparklines
+      history: history.slice(-15),
     };
   }
-  console.log("Caches prefilled successfully!");
 }
 
-// Parse trades file and return list
 function loadTrades(): Trade[] {
   try {
     const data = fs.readFileSync(TRADES_FILE, "utf8");
@@ -175,12 +152,10 @@ function loadTrades(): Trade[] {
   }
 }
 
-// Save trades file
 function saveTrades(trades: Trade[]) {
   fs.writeFileSync(TRADES_FILE, JSON.stringify(trades, null, 2), "utf8");
 }
 
-// Aggregate positions from trades
 function aggregatePositions(trades: Trade[]): Position[] {
   const positionsMap: Record<string, { qty: number; totalCost: number }> = {};
 
@@ -194,8 +169,6 @@ function aggregatePositions(trades: Trade[]): Position[] {
       pos.qty += t.quantity;
       pos.totalCost += t.quantity * t.price;
     } else {
-      // For SELL, subtract qty. If we sell, average cost remains the same.
-      // But we adjust total cost proportionally to keep average cost consistent.
       if (pos.qty > 0) {
         const avgPrice = pos.totalCost / pos.qty;
         pos.qty = Math.max(0, pos.qty - t.quantity);
@@ -207,7 +180,6 @@ function aggregatePositions(trades: Trade[]): Position[] {
   const positions: Position[] = [];
   let totalPortfolioValue = 0;
 
-  // First pass to compute current market values and filter zero-qty assets
   const activeSymbols = Object.keys(positionsMap).filter(sym => positionsMap[sym].qty > 0);
   
   for (const sym of activeSymbols) {
@@ -218,7 +190,6 @@ function aggregatePositions(trades: Trade[]): Position[] {
     totalPortfolioValue += marketValue;
   }
 
-  // Second pass to compute weights, sectors, and P&L
   for (const sym of activeSymbols) {
     const data = positionsMap[sym];
     const avgCost = data.totalCost / data.qty;
@@ -250,7 +221,6 @@ function aggregatePositions(trades: Trade[]): Position[] {
   return positions;
 }
 
-// Compute the complete metrics suite
 function calculateMetricsSuite(positions: Position[], trades: Trade[], confidence: number = 0.95): {
   metrics: RiskMetrics;
   monteCarloPaths: any[];
@@ -261,10 +231,8 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
   const totalPL = totalValue - totalCost;
   const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
 
-  // Get daily returns matrix for risk calculations
   const historicalReturns: Record<string, number[]> = {};
   
-  // Calculate historical returns for each position and SPY
   const activeSymbols = Array.from(new Set([...positions.map(p => p.symbol), "SPY"]));
   
   for (const sym of activeSymbols) {
@@ -277,7 +245,6 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
     historicalReturns[sym] = rets;
   }
 
-  // Calculate portfolio-level returns and daily volatility
   let dailyPL = 0;
   let prevTotalVal = 0;
 
@@ -291,31 +258,23 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
 
   const dailyPLPercent = prevTotalVal > 0 ? (dailyPL / prevTotalVal) * 100 : 0;
 
-  // Prepare input for VaR calculations
   const varPortfolio = positions.map(p => ({
     symbol: p.symbol,
     marketValue: p.marketValue,
     weight: p.weight / 100,
   }));
 
-  // Historical Simulation VaR
   const historicalVaR95 = computeHistoricalVaR(varPortfolio, historicalReturns, 0.95);
   const historicalVaR99 = computeHistoricalVaR(varPortfolio, historicalReturns, 0.99);
 
-  // Monte Carlo Simulation VaR
   const mcResults95 = computeMonteCarloVaR(varPortfolio, historicalReturns, 0.95, 1000, 10);
   const mcResults99 = computeMonteCarloVaR(varPortfolio, historicalReturns, 0.99, 1000, 10);
 
-  // Volatility and Beta estimation
   let portfolioVolatility = 0;
   let portfolioBeta = 1.0;
 
   if (positions.length > 0 && historicalReturns["SPY"]?.length > 0) {
-    // Portfolio daily volatility
     const spyReturns = historicalReturns["SPY"];
-    const weights = positions.map(p => p.weight / 100);
-    
-    // We can estimate portfolio daily returns series to get real portfolio volatility
     const pReturns: number[] = [];
     const minLength = Math.min(...positions.map(p => historicalReturns[p.symbol]?.length || 0));
     
@@ -329,7 +288,6 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
       }
       portfolioVolatility = calculateVolatility(pReturns);
       
-      // Calculate Portfolio Beta relative to SPY
       let weightedBetaSum = 0;
       for (const p of positions) {
         const assetBeta = computeBeta(historicalReturns[p.symbol], spyReturns);
@@ -339,15 +297,11 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
     }
   }
 
-  // Drawdown estimation (simplified trailing historical peak to trough drawdown)
   let maxDrawdown = 0;
-  let peak = totalValue;
-  // Let's build a mini-historical P&L performance for the past 15 days
   const historicalPerf: HistoricalPerformance[] = [];
   const minLength = Math.min(...activeSymbols.map(sym => historicalPricesCache[sym]?.length || 0));
 
   if (minLength > 0 && positions.length > 0) {
-    // Walk back 15 days
     const numDays = Math.min(15, minLength);
     let tempPeak = totalValue;
 
@@ -376,7 +330,6 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
       });
     }
   } else {
-    // Fill static historical points
     for (let i = 14; i >= 0; i--) {
       const dateStr = new Date(Date.now() - i * 24 * 3600 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const mult = 1 + (Math.sin(i / 2) * 0.03) + (Math.cos(i) * 0.01);
@@ -399,19 +352,18 @@ function calculateMetricsSuite(positions: Position[], trades: Trade[], confidenc
     historicalVaR99: Math.round(historicalVaR99 * 100) / 100,
     monteCarloVaR95: Math.round(mcResults95.varAmount * 100) / 100,
     monteCarloVaR99: Math.round(mcResults99.varAmount * 100) / 100,
-    maxDrawdown: Math.round(maxDrawdown * 100) / 100 || 1.85, // safety default
-    volatility: Math.round(portfolioVolatility * 10000) / 10000, // Keep daily vol detailed
+    maxDrawdown: Math.round(maxDrawdown * 100) / 100 || 1.85,
+    volatility: Math.round(portfolioVolatility * 10000) / 10000,
     beta: Math.round(portfolioBeta * 100) / 100,
   };
 
   return {
     metrics,
-    monteCarloPaths: mcResults95.paths, // use 95% paths for chart representation
+    monteCarloPaths: mcResults95.paths,
     historicalPerf,
   };
 }
 
-// Assemble full dashboard payload
 function getDashboardPayload(): any {
   const trades = loadTrades();
   const positions = aggregatePositions(trades);
@@ -429,9 +381,6 @@ function getDashboardPayload(): any {
   };
 }
 
-// REST API Endpoints
-
-// 1. Get entire dashboard state
 app.get("/api/dashboard", (req, res) => {
   try {
     const payload = getDashboardPayload();
@@ -441,18 +390,16 @@ app.get("/api/dashboard", (req, res) => {
   }
 });
 
-// 2. Get list of trades
 app.get("/api/trades", (req, res) => {
   res.json(loadTrades());
 });
 
-// 3. Add a trade log
 app.post("/api/trades", async (req, res) => {
   try {
     const { symbol, type, quantity, price } = req.body;
     
     if (!symbol || !type || !quantity || !price) {
-      return res.status(400).json({ error: "Missing required trade fields (symbol, type, quantity, price)." });
+      return res.status(400).json({ error: "Missing required trade fields." });
     }
 
     const trades = loadTrades();
@@ -468,9 +415,7 @@ app.post("/api/trades", async (req, res) => {
     trades.push(newTrade);
     saveTrades(trades);
 
-    // If we have no history for this symbol, fetch it first!
     if (!historicalPricesCache[newTrade.symbol]) {
-      console.log(`New symbol added: ${newTrade.symbol}. Fetching market data...`);
       const history = await getStockHistory(newTrade.symbol);
       const lastPrice = history[history.length - 1];
       const prevPrice = history[history.length - 2] || lastPrice;
@@ -487,8 +432,6 @@ app.post("/api/trades", async (req, res) => {
     }
 
     const payload = getDashboardPayload();
-    
-    // Broadcast to WebSocket clients
     broadcastState(payload);
 
     res.status(201).json(payload);
@@ -497,7 +440,6 @@ app.post("/api/trades", async (req, res) => {
   }
 });
 
-// 4. Delete a trade log
 app.delete("/api/trades/:id", (req, res) => {
   try {
     const id = req.params.id;
@@ -512,8 +454,6 @@ app.delete("/api/trades/:id", (req, res) => {
 
     saveTrades(trades);
     const payload = getDashboardPayload();
-    
-    // Broadcast updated state
     broadcastState(payload);
 
     res.json(payload);
@@ -522,7 +462,6 @@ app.delete("/api/trades/:id", (req, res) => {
   }
 });
 
-// 5. Trigger custom simulations
 app.post("/api/simulation", (req, res) => {
   try {
     const { confidenceLevel, numSimulations, days } = req.body;
@@ -533,7 +472,6 @@ app.post("/api/simulation", (req, res) => {
     const targetSims = parseInt(numSimulations) || 1000;
     const targetDays = parseInt(days) || 10;
 
-    // Get returns
     const historicalReturns: Record<string, number[]> = {};
     for (const p of positions) {
       const prices = historicalPricesCache[p.symbol] || [];
@@ -564,7 +502,6 @@ app.post("/api/simulation", (req, res) => {
   }
 });
 
-// List of connected WebSocket clients
 const clients = new Set<WebSocket>();
 
 function broadcastState(payload: any) {
@@ -588,8 +525,6 @@ function broadcastAlert(alertType: string, message: string, data: any) {
   }
 }
 
-// Live price simulations
-// Randomly tick stock prices slightly to demonstrate live streaming
 function startLiveTicks() {
   setInterval(() => {
     const trades = loadTrades();
@@ -599,26 +534,22 @@ function startLiveTicks() {
     let hasUpdates = false;
 
     for (const pos of positions) {
-      // Simulate 50% chance of price movement for active positions
       if (Math.random() > 0.5) {
         const livePriceObj = livePriceCache[pos.symbol];
         if (!livePriceObj) continue;
 
-        // Random swing between -0.4% and +0.4%
         const pct = (Math.random() - 0.5) * 0.008;
         const tickDiff = livePriceObj.price * pct;
         
         livePriceObj.price = Math.max(0.1, Math.round((livePriceObj.price + tickDiff) * 100) / 100);
         livePriceObj.change = Math.round((livePriceObj.change + tickDiff) * 100) / 100;
         
-        // Compute change percent based on a fictional base price
         const baseEst = livePriceObj.price - livePriceObj.change;
         livePriceObj.changePercent = baseEst > 0 ? Math.round((livePriceObj.change / baseEst) * 100 * 100) / 100 : 0;
         livePriceObj.lastUpdated = new Date().toISOString();
         
         hasUpdates = true;
 
-        // Optional alert if a single stock has an extreme tick (e.g. > 0.3%)
         if (Math.abs(pct) > 0.0035) {
           const dir = pct > 0 ? "surge" : "dip";
           broadcastAlert(
@@ -631,11 +562,9 @@ function startLiveTicks() {
     }
 
     if (hasUpdates) {
-      // Recalculate metrics suite and broadcast new dashboard state
       const updatedPayload = getDashboardPayload();
       broadcastState(updatedPayload);
 
-      // Check daily P&L threshold for drawdown alerts!
       const dailyPLPercent = updatedPayload.metrics.dailyPLPercent;
       if (dailyPLPercent < -2.0) {
         broadcastAlert(
@@ -651,22 +580,17 @@ function startLiveTicks() {
         );
       }
     }
-  }, 4000); // Ticks every 4 seconds for immediate visual feedback!
+  }, 4000);
 }
 
-// Main initializer
 async function initializeServer() {
-  // Load initial symbols
   const initialTrades = loadTrades();
   const initialSymbols = initialTrades.map(t => t.symbol);
   
-  // Fill historical prices and live prices
   await prefillCaches(initialSymbols);
 
-  // Start ticking simulation
   startLiveTicks();
 
-  // Vite integration
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -681,26 +605,19 @@ async function initializeServer() {
     });
   }
 
-  // Start HTTP and WebSocket Server combined on PORT 3000
   const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`========================================`);
-    console.log(` SERVER RUNNING: http://localhost:${PORT}`);
-    console.log(` Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`========================================`);
+    console.log(`Server running on port ${PORT}`);
   });
 
-  // Setup WS server
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", (ws) => {
     clients.add(ws);
-    console.log(`Client connected to WebSocket (Active: ${clients.size})`);
 
-    // Send immediate initial state
     try {
       ws.send(JSON.stringify({ type: "INITIAL_STATE", payload: getDashboardPayload() }));
     } catch (e) {
-      console.error("Error sending initial WS message", e);
+      console.error(e);
     }
 
     ws.on("message", (msg) => {
@@ -716,11 +633,10 @@ async function initializeServer() {
 
     ws.on("close", () => {
       clients.delete(ws);
-      console.log(`Client disconnected (Active: ${clients.size})`);
     });
   });
 }
 
 initializeServer().catch(err => {
-  console.error("Failed to start server:", err);
+  console.error(err);
 });

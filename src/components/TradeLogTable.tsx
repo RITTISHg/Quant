@@ -64,17 +64,14 @@ export default function TradeLogTable({ trades, onDeleteTrade }: TradeLogTablePr
 
                 return (
                   <tr key={t.id} className="hover:bg-gray-800/20 transition-colors group" id={`trade-row-${t.id}`}>
-                    {/* Timestamp */}
                     <td className="py-3 pl-2 font-mono text-gray-400">
                       {formatDate(t.timestamp)}
                     </td>
 
-                    {/* Ticker Symbol */}
                     <td className="py-3 font-bold text-gray-200">
                       {t.symbol}
                     </td>
 
-                    {/* Action buy/sell tag */}
                     <td className="py-3 text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded font-mono font-bold text-[9px] border ${
                         isBuy 
@@ -85,22 +82,18 @@ export default function TradeLogTable({ trades, onDeleteTrade }: TradeLogTablePr
                       </span>
                     </td>
 
-                    {/* Quantity */}
                     <td className="py-3 text-right font-mono font-medium text-gray-300">
                       {t.quantity.toLocaleString('en-US', { maximumFractionDigits: 4 })}
                     </td>
 
-                    {/* Price */}
                     <td className="py-3 text-right font-mono text-gray-400">
                       {formatCurrency(t.price)}
                     </td>
 
-                    {/* Total Value */}
                     <td className="py-3 text-right font-mono font-semibold text-gray-200">
                       {formatCurrency(totalOutlay)}
                     </td>
 
-                    {/* Delete Control */}
                     <td className="py-3 text-center pr-2">
                       <button
                         onClick={() => onDeleteTrade(t.id)}

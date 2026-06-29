@@ -1,7 +1,3 @@
-/**
- * Shared Type Definitions for Stock Portfolio Risk Dashboard
- */
-
 export interface Trade {
   id: string;
   symbol: string;
@@ -31,7 +27,7 @@ export interface LivePrice {
   change: number;
   changePercent: number;
   lastUpdated: string;
-  history?: number[]; // brief intra-day or historical prices for quick analysis
+  history?: number[];
 }
 
 export interface RiskMetrics {
@@ -46,13 +42,13 @@ export interface RiskMetrics {
   monteCarloVaR95: number;
   monteCarloVaR99: number;
   maxDrawdown: number;
-  volatility: number; // Daily volatility
-  beta: number; // Portfolio Beta vs SPY
+  volatility: number;
+  beta: number;
 }
 
 export interface MonteCarloPath {
   day: number;
-  [key: string]: number; // Path values like path0, path1, path2... and median, percentile5, percentile95
+  [key: string]: number;
 }
 
 export interface HistoricalPerformance {

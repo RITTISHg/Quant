@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, TrendingDown, Cpu, Sparkles, HelpCircle } from 'lucide-react';
+import { Play, TrendingDown, Cpu, Sparkles } from 'lucide-react';
 import { RiskMetrics } from '../types';
 
 interface RiskMetricsPanelProps {
@@ -8,7 +8,6 @@ interface RiskMetricsPanelProps {
 }
 
 export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetricsPanelProps) {
-  // Config state for custom simulation
   const [confidence, setConfidence] = useState(0.95);
   const [days, setDays] = useState(10);
   const [sims, setSims] = useState(1000);
@@ -40,7 +39,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
     return val.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
   };
 
-  // Compute percentage of portfolio at risk
   const hist95Percent = metrics.portfolioValue > 0 ? (metrics.historicalVaR95 / metrics.portfolioValue) * 100 : 0;
   const hist99Percent = metrics.portfolioValue > 0 ? (metrics.historicalVaR99 / metrics.portfolioValue) * 100 : 0;
   const mc95Percent = metrics.portfolioValue > 0 ? (metrics.monteCarloVaR95 / metrics.portfolioValue) * 100 : 0;
@@ -65,10 +63,7 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
           </span>
         </div>
 
-        {/* Side-by-Side Methodology Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-          
-          {/* Historical Simulation Method */}
           <div className="bg-gray-950/50 border border-gray-800/60 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -81,7 +76,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
             </div>
 
             <div className="space-y-3 pt-2">
-              {/* 95% Confidence */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-400 font-medium">1-Day VaR (95%)</span>
@@ -96,7 +90,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
                 </div>
               </div>
 
-              {/* 99% Confidence */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-400 font-medium">1-Day VaR (99%)</span>
@@ -113,7 +106,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
             </div>
           </div>
 
-          {/* Monte Carlo Simulation Method */}
           <div className="bg-gray-950/50 border border-gray-800/60 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -126,7 +118,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
             </div>
 
             <div className="space-y-3 pt-2">
-              {/* 95% Confidence */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-400 font-medium">10-Day VaR (95%)</span>
@@ -141,7 +132,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
                 </div>
               </div>
 
-              {/* 99% Confidence */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-400 font-medium">10-Day VaR (99%)</span>
@@ -160,7 +150,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
         </div>
       </div>
 
-      {/* Interactive Custom Simulator Form */}
       <div className="border-t border-gray-800/80 pt-5 mt-4">
         <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Play className="h-3.5 w-3.5 text-emerald-400 fill-emerald-500/20" /> Run Custom Simulation Path
@@ -217,7 +206,6 @@ export default function RiskMetricsPanel({ metrics, onRunSimulation }: RiskMetri
           </button>
         </form>
 
-        {/* Display custom results if available */}
         {customResult && (
           <div className="mt-4 p-3 bg-emerald-950/20 border border-emerald-500/20 rounded-xl flex items-center justify-between text-xs animate-fade-in">
             <div className="flex items-center gap-2">

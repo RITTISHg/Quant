@@ -28,11 +28,9 @@ export default function MetricCard({
 
   return (
     <div className="bg-gray-900/40 border border-gray-800/80 rounded-2xl p-5 hover:border-gray-700/60 transition-all flex flex-col justify-between relative group overflow-hidden" id={`metric-${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-      {/* Decorative subtle background mesh */}
       <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-gray-800/10 to-transparent rounded-full filter blur-xl group-hover:scale-110 transition-transform`} />
 
       <div>
-        {/* Card Header */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</span>
           <div className={`p-2 rounded-xl bg-gray-950/60 border border-gray-800 ${iconColor}`}>
@@ -40,7 +38,6 @@ export default function MetricCard({
           </div>
         </div>
 
-        {/* Main Value */}
         <div className="mt-1">
           {loading ? (
             <div className="h-8 w-2/3 bg-gray-800 rounded animate-pulse" />
@@ -52,7 +49,6 @@ export default function MetricCard({
         </div>
       </div>
 
-      {/* Sub Value / Percentage Trend */}
       <div className="mt-4 flex items-center gap-1.5 min-h-[20px]">
         {loading ? (
           <div className="h-3.5 w-1/2 bg-gray-800 rounded animate-pulse" />
@@ -81,7 +77,6 @@ export default function MetricCard({
         ) : null}
       </div>
 
-      {/* Interactive Tooltip helper */}
       {tooltip && (
         <div className="absolute bottom-2 right-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-300">
           <span className="text-[9px] font-mono text-gray-500 bg-gray-950/80 px-1.5 py-0.5 rounded border border-gray-800/50">

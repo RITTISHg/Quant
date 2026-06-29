@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Plus, Radio, AlertTriangle, X, RefreshCw, LogIn } from 'lucide-react';
+import { ShieldCheck, Plus, Radio, AlertTriangle, X } from 'lucide-react';
 import { Trade, SECTOR_MAP } from '../types';
 
 interface HeaderProps {
@@ -17,7 +17,6 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
   const [price, setPrice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-fill price estimates for convenience
   const handleSymbolChange = (sym: string) => {
     setSymbol(sym);
     let estimatedPrice = '150';
@@ -71,7 +70,6 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
   return (
     <header className="border-b border-gray-800 bg-gray-950/60 backdrop-blur-md sticky top-0 z-50 px-6 py-4" id="app-header">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {/* Logo and Connection Indicator */}
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-emerald-950/50 border border-emerald-500/30 rounded-xl text-emerald-400">
             <ShieldCheck className="h-6 w-6" id="logo-icon" />
@@ -87,9 +85,7 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
           </div>
         </div>
 
-        {/* Live Status and Quick Actions */}
         <div className="flex items-center flex-wrap gap-3 md:self-center">
-          {/* WebSocket Status */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800">
             <Radio className={`h-3.5 w-3.5 ${wsConnected ? 'text-emerald-400 animate-pulse' : 'text-rose-500'}`} />
             <span className="text-xs font-mono font-medium text-gray-300">
@@ -97,7 +93,6 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
             </span>
           </div>
 
-          {/* Quick Trade Execution Trigger */}
           <button
             onClick={() => {
               setIsModalOpen(true);
@@ -112,7 +107,6 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
         </div>
       </div>
 
-      {/* Live Warning Alerts Marquee (Displays WebSocket Drawdown / Tick alerts) */}
       {activeAlerts.length > 0 && (
         <div className="mt-3 bg-rose-950/30 border border-rose-500/20 rounded-lg p-2.5 flex items-start justify-between gap-3 animate-fade-in">
           <div className="flex items-center gap-2.5 overflow-hidden text-ellipsis">
@@ -136,7 +130,6 @@ export default function Header({ wsConnected, activeAlerts, onAddTrade, onClearA
         </div>
       )}
 
-      {/* Trade execution modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-6 relative animate-scale-up" id="trade-modal">

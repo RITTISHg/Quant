@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { ArrowUpRight, ArrowDownRight, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { Position, LivePrice } from '../types';
 
 interface PositionTableProps {
@@ -8,7 +8,6 @@ interface PositionTableProps {
 }
 
 export default function PositionTable({ positions, prices }: PositionTableProps) {
-  // Track which symbols recently updated to flash them
   const [flashStates, setFlashStates] = useState<Record<string, 'up' | 'down' | null>>({});
   const prevPricesRef = useRef<Record<string, number>>({});
 
@@ -32,7 +31,6 @@ export default function PositionTable({ positions, prices }: PositionTableProps)
     if (hasChanges) {
       setFlashStates(prev => ({ ...prev, ...newFlashes }));
       
-      // Clear flashes after 1.2 seconds
       const timer = setTimeout(() => {
         setFlashStates({});
       }, 1200);
@@ -89,7 +87,6 @@ export default function PositionTable({ positions, prices }: PositionTableProps)
                     className="hover:bg-gray-800/20 transition-all group"
                     id={`pos-row-${pos.symbol}`}
                   >
-                    {/* Symbol / Name / Sector */}
                     <td className="py-3.5 pl-2">
                       <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-gray-950 border border-gray-800/80 flex flex-col items-center justify-center font-mono font-bold text-xs text-gray-300 group-hover:border-gray-700/60 transition-colors">
@@ -102,17 +99,14 @@ export default function PositionTable({ positions, prices }: PositionTableProps)
                       </div>
                     </td>
 
-                    {/* Shares */}
                     <td className="py-3.5 text-right font-mono font-semibold text-gray-300">
                       {pos.quantity.toLocaleString('en-US', { maximumFractionDigits: 4 })}
                     </td>
 
-                    {/* Average buy cost */}
                     <td className="py-3.5 text-right font-mono text-gray-400">
                       {formatCurrency(pos.averageBuyPrice)}
                     </td>
 
-                    {/* Current Price (with live pulsing flash states!) */}
                     <td className="py-3.5 text-right">
                       <span className={`inline-flex items-center justify-end font-mono font-semibold px-2.5 py-1 rounded-md transition-all duration-300 ${
                         flash === 'up' 
@@ -125,12 +119,10 @@ export default function PositionTable({ positions, prices }: PositionTableProps)
                       </span>
                     </td>
 
-                    {/* Market Value */}
                     <td className="py-3.5 text-right font-mono font-bold text-gray-200">
                       {formatCurrency(pos.marketValue)}
                     </td>
 
-                    {/* Weight progress */}
                     <td className="py-3.5 text-center">
                       <div className="inline-flex flex-col items-center w-28">
                         <span className="text-xs font-mono font-semibold text-gray-300 mb-1">{pos.weight.toFixed(1)}%</span>
@@ -143,7 +135,6 @@ export default function PositionTable({ positions, prices }: PositionTableProps)
                       </div>
                     </td>
 
-                    {/* Unrealized P&L */}
                     <td className="py-3.5 text-right pr-2">
                       <div className="inline-flex flex-col items-end">
                         <span className={`inline-flex items-center gap-0.5 font-mono font-bold text-xs px-2 py-0.5 rounded-md ${
