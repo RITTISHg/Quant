@@ -1,0 +1,6 @@
+{
+  "name": "Real-Time Stock Portfolio Risk Dashboard",
+  "description": "A live stock portfolio tracker and risk management dashboard. Calculates Value at Risk (VaR) using Historical Simulation and Monte Carlo methods, visualizes exposure heatmaps, P&L charts, and streams live prices via WebSockets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
