@@ -11,6 +11,7 @@ interface MetricCardProps {
   iconColor: string;
   tooltip?: string;
   loading?: boolean;
+  isTriggeredAlert?: boolean;
 }
 
 export default function MetricCard({
@@ -23,27 +24,40 @@ export default function MetricCard({
   iconColor,
   tooltip,
   loading = false,
+  isTriggeredAlert = false,
 }: MetricCardProps) {
   const isPositive = change !== undefined ? change >= 0 : true;
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800/80 rounded-2xl p-5 hover:border-gray-700/60 transition-all flex flex-col justify-between relative group overflow-hidden" id={`metric-${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+    <div 
+      className={`rounded-2xl p-5 hover:border-gray-700/60 transition-all flex flex-col justify-between relative group overflow-hidden ${
+        isTriggeredAlert 
+          ? 'bg-rose-950/15 border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)] border' 
+          : 'bg-gray-900/40 border border-gray-800/80'
+      }`} 
+      id={`metric-${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+    >
       <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-gray-800/10 to-transparent rounded-full filter blur-xl group-hover:scale-110 transition-transform`} />
 
       <div>
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</span>
-          <div className={`p-2 rounded-xl bg-gray-950/60 border border-gray-800 ${iconColor}`}>
-            <Icon className="h-4 w-4" />
+          <div className={`p-2 rounded-xl bg-gray-950/60 border border-gray-800 ${isTriggeredAlert ? 'text-rose-400 border-rose-500/20' : iconColor}`}>
+            <Icon className={`h-4 w-4 ${isTriggeredAlert ? 'animate-pulse' : ''}`} />
           </div>
         </div>
 
-        <div className="mt-1">
+        <div className="mt-1 flex items-baseline justify-between gap-1">
           {loading ? (
             <div className="h-8 w-2/3 bg-gray-800 rounded animate-pulse" />
           ) : (
-            <span className="text-2xl font-bold font-mono text-gray-100 tracking-tight">
+            <span className={`text-2xl font-bold font-mono tracking-tight ${isTriggeredAlert ? 'text-rose-300' : 'text-gray-100'}`}>
               {value}
+            </span>
+          )}
+          {isTriggeredAlert && (
+            <span className="text-[8px] bg-rose-950 border border-rose-500/30 text-rose-400 font-mono font-bold px-1.5 py-0.5 rounded animate-pulse shrink-0">
+              OVER LIMIT
             </span>
           )}
         </div>

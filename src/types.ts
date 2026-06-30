@@ -68,6 +68,48 @@ export interface DashboardState {
   isSimulating: boolean;
 }
 
+export interface UserCustomization {
+  visibleKPIs: {
+    portfolioValue: boolean;
+    historicalVaR: boolean;
+    monteCarloVaR: boolean;
+    betaVol: boolean;
+  };
+  visiblePanels: {
+    historicalChart: boolean;
+    monteCarloChart: boolean;
+    positionTable: boolean;
+    exposureHeatmap: boolean;
+    riskSimulator: boolean;
+    tradeLog: boolean;
+  };
+  layoutOrder: string[];
+  colorTheme: 'emerald' | 'blue' | 'amber' | 'violet' | 'rose';
+  chartStyle: 'area' | 'line' | 'bar';
+  thresholds: {
+    maxVolatility: number;
+    maxBeta: number;
+    maxHistoricalVaR: number;
+    maxMonteCarloVaR: number;
+  };
+  tableColumns: {
+    positions: {
+      sector: boolean;
+      shares: boolean;
+      costBasis: boolean;
+      currentPrice: boolean;
+      weight: boolean;
+      unrealizedPL: boolean;
+    };
+    trades: {
+      dateTime: boolean;
+      shares: boolean;
+      price: boolean;
+      outlay: boolean;
+    };
+  };
+}
+
 export const SECTOR_MAP: Record<string, { sector: string; name: string }> = {
   AAPL: { sector: 'Technology', name: 'Apple Inc.' },
   MSFT: { sector: 'Technology', name: 'Microsoft Corporation' },

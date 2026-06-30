@@ -44,20 +44,20 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
   };
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800/80 rounded-2xl p-6 flex flex-col h-full justify-between gap-6" id="exposure-heatmap-section">
+    <div className="bg-gray-900/40 border border-gray-800/80 rounded-2xl p-6 flex flex-col md:flex-row lg:flex-col h-full justify-between gap-6 md:gap-8 lg:gap-6" id="exposure-heatmap-section">
       
-      <div className="flex flex-col flex-1">
-        <div>
+      <div className="flex flex-col flex-1 w-full md:w-1/2 lg:w-full justify-between">
+        <div className="mb-4">
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-800/80">
             <Layers className="h-4.5 w-4.5 text-emerald-400" />
             <h3 className="text-sm font-bold text-gray-100 font-sans tracking-tight">Asset Risk Exposure Map</h3>
           </div>
-          <p className="text-[11px] text-gray-400 leading-relaxed mb-4">
+          <p className="text-[11px] text-gray-400 leading-relaxed">
             Sizing relative to the entire portfolio. Box size shows weight, border color matches P&L.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
           {positions.length === 0 ? (
             <div className="col-span-full text-center py-8 text-gray-500 font-medium text-xs">
               No active holdings to map.
@@ -97,9 +97,11 @@ export default function ExposureHeatmap({ positions }: ExposureHeatmapProps) {
         </div>
       </div>
 
-      <div className="border-t border-gray-800/60 my-1 shrink-0" />
+      {/* Responsive divider: horizontal on mobile/desktop, vertical on tablet */}
+      <div className="hidden md:block lg:hidden w-px bg-gray-800/60 shrink-0 self-stretch my-2" />
+      <div className="block md:hidden lg:block h-px w-full bg-gray-800/60 shrink-0 my-1" />
 
-      <div className="flex flex-col shrink-0">
+      <div className="flex flex-col shrink-0 w-full md:w-1/2 lg:w-full justify-between">
         <div>
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-800/80">
             <PieChart className="h-4.5 w-4.5 text-emerald-400" />
