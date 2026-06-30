@@ -15,6 +15,38 @@ QuantRisk is a real-time portfolio management and quantitative risk engine. It c
 
 ---
 
+## Live Demo
+
+Below are screenshots of the running QuantRisk portfolio cockpit and simulation charts:
+
+### 🖥️ Full Running Dashboard
+![Dashboard](./screenshots/Screenshot%20From%202026-06-30%2022-09-23.png)
+
+### 📈 Monte Carlo Simulation Output
+![Monte Carlo Charts](./screenshots/Screenshot%20From%202026-06-30%2022-09-31.png)
+
+### 🛡️ Active Allocation & Exposure Heatmap
+![Active Exposure Heatmap](./screenshots/Screenshot%20From%202026-06-30%2022-09-36.png)
+
+---
+
+## Risk Methodology
+
+**Historical Simulation VaR (1-Day)**
+- Uses 90-day rolling window of actual asset returns
+- Confidence level: 95%
+
+**Monte Carlo VaR (10-Day)**  
+- 1,000+ simulated price paths via Geometric Brownian Motion
+- Multi-asset correlation preserved via Cholesky Decomposition
+- Confidence level: 99%
+
+**Why both methods?**
+Historical simulation captures fat tails in real return distributions.
+Monte Carlo models forward-looking scenarios under correlated shocks — the same methodology used in bank-level stress testing.
+
+---
+
 ## Technology Stack
 
 - **Frontend**: React 18, Vite, Tailwind CSS, Recharts, Lucide Icons

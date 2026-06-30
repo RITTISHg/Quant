@@ -1,0 +1,9 @@
+{
+  "portfolio": [
+    { "ticker": "RELIANCE.NS", "shares": 10, "buy_price": 2850.00 },
+    { "ticker": "TCS.NS", "shares": 5, "buy_price": 3920.00 },
+    { "ticker": "INFY.NS", "shares": 15, "buy_price": 1780.00 },
+    { "ticker": "HDFCBANK.NS", "shares": 8, "buy_price": 1650.00 },
+    { "ticker": "ICICIBANK.NS", "shares": 20, "buy_price": 1240.00 }
+  ]
+}
